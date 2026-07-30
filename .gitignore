@@ -9,6 +9,8 @@ GeneratedFiles
 *.suo
 *.user
 build*
+!BUILD_ARM64_NOTES.md
+pkgroot/
 Thumbs.db
 *.pkg
 *.opendb
