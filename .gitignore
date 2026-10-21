@@ -13,6 +13,9 @@ build*
 pkgroot/
 Thumbs.db
 *.pkg
+*.dmg
+artifacts/
+build-arm64-release/
 *.opendb
 
 .clang_complete

@@ -26,6 +26,26 @@ Please refer to the OpenToonz site at <https://opentoonz.github.io/e/index.html>
 
 <img src=./doc/language.png>
 
+## Apple Silicon arm64 distribution
+
+This fork provides an unofficial macOS arm64 build for Apple Silicon Macs. It
+is not an OpenToonz release and is not endorsed or maintained by OpenToonz.
+
+The private GitHub Release is the distribution source. Each `vX.Y.Z` tag runs
+the macOS arm64 GitHub Actions workflow, which builds and ad-hoc signs
+`xdts_viewer_arm64.app`, packages it as a DMG, and attaches the DMG and its
+SHA-256 file to the Release. Developer ID signing and notarization are not
+configured yet, so macOS may show a first-launch warning.
+
+To reproduce the package locally on an Apple Silicon Mac with Homebrew Qt 5:
+
+```zsh
+./scripts/package-macos-arm64.sh 1.3.0
+```
+
+The generated DMG is written under `artifacts/`, which is intentionally
+ignored by Git.
+
 ## How to Build Locally
 
 - [Windows](./doc/how_to_build_win.md)

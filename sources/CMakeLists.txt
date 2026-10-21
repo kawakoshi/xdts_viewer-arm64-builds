@@ -97,7 +97,9 @@ endif()
 set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${QTDIR};${QTDIR}/lib/cmake")
 
 if(BUILD_ENV_APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.10)
+    if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET 10.10)
+    endif()
 endif()
 
 # Add Qt libraries. QtCore and QtGui libraries will be
@@ -192,7 +194,7 @@ add_definitions(
 if(BUILD_ENV_APPLE)
 # info plists
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST
-        ${CMAKE_SOURCE_DIR}/../macOS/BundleInfo.plist.in)
+        ${CMAKE_SOURCE_DIR}/../macos/BundleInfo.plist.in)
 
 # resources
     set_source_files_properties(${MACOSX_RESOURCE_FILES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)

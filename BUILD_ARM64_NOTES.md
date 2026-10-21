@@ -24,6 +24,23 @@ Date: 2026-07-31
 - Package signing / pkg 署名: unsigned / 未署名
 - Local launch check / ローカル起動確認: launched from `build-arm64/xdts_viewer.app`
 
+## GitHub Release packaging
+
+The maintained distribution path is now a private GitHub Release. Push a
+semantic-version tag such as `v1.3.0` to run the macOS arm64 workflow. The
+workflow uses a GitHub-hosted Apple Silicon runner, builds with Qt 5, verifies
+the arm64 executable and ad-hoc signature, creates a DMG, and attaches the DMG
+and its SHA-256 file to the Release.
+
+The same package can be reproduced locally with:
+
+```zsh
+./scripts/package-macos-arm64.sh 1.3.0
+```
+
+The repository-owned `sources/XDTS_Viewer.icns` is used as the arm64 app icon.
+Generated build directories and DMG files are ignored by Git.
+
 ## Local Prerequisites Used / 使用したローカル環境
 
 - CMake: `4.4.0`

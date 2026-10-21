@@ -1,74 +1,45 @@
-name: MacOS Build
+name: macOS arm64 Release
 
-on: [push, pull_request]
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
 
 jobs:
-  macOS:
-    runs-on: 	macos-15-intel
+  build-release:
+    runs-on: macos-14
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Remove symlinks
-      run: |
-        # remove existing symlinks before installing python@3.10 and 3.11
-        rm /usr/local/bin/2to3
-        rm /usr/local/bin/idle3
-        rm /usr/local/bin/pydoc3
-        rm /usr/local/bin/python3
-        rm /usr/local/bin/python3-config
-        rm /usr/local/bin/2to3-3.11
-        rm /usr/local/bin/idle3.11
-        rm /usr/local/bin/pydoc3.11
-        rm /usr/local/bin/python3.11
-        rm /usr/local/bin/python3.11-config
+      - name: Check out source
+        uses: actions/checkout@v4
 
-    - name: Install libraries
-      run: |
-        brew update
-        brew install qt@5 ninja ccache
-        
-    - uses: actions/cache@v4
-      with:
-        path: /Users/runner/.ccache
-        key: ${{ runner.os }}-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-
+      - name: Confirm Apple Silicon runner
+        run: test "$(uname -m)" = "arm64"
 
-    - name: Build
-      run: |
-        mkdir build
-        cd build
-        cmake ../sources -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DQTDIR='/usr/local/opt/qt@5' -DWITH_TRANSLATION=OFF
-        ninja
-    
-    - name: Introduce Libraries and Stuff
-      run: |
-        cd build
-        cp -pr ../xdts_viewer_resources xdts_viewer.app/Contents/MacOS/xdts_viewer_resources
-        /usr/local/opt/qt@5/bin/macdeployqt xdts_viewer.app -verbose=1 -always-overwrite
-    
-    - name: Modify Library Paths
-      run: |
-        cd build/xdts_viewer.app/Contents/Frameworks
-        for TARGETLIB in `ls ./ | grep dylib`
-        do
-          echo $TARGETLIB
-          for FROMPATH in `otool -L "$TARGETLIB" | grep ".dylib" | grep -v "$TARGETLIB" | grep -v "@executable_path/../Frameworks" | sed -e"s/ (.*$//"`
-          do
-            echo "  $FROMPATH"
-            LIBNAME=`basename $FROMPATH`
-            if [[ -e ./$LIBNAME ]]; then
-              echo "updating library path of $LIBNAME in $TARGETLIB"
-              install_name_tool -change "$FROMPATH" "@executable_path/../Frameworks/$LIBNAME" $TARGETLIB
-            fi
-          done
-        done
+      - name: Install build dependencies
+        run: brew install qt@5 ninja
 
-    - name: Create Artifact
-      run: |
-        cd build
-        /usr/local/opt/qt@5/bin/macdeployqt xdts_viewer.app -dmg -verbose=1
-    
-    - uses: actions/upload-artifact@v4
-      with:
-        name: xdts_viewer-${{ runner.os }}-${{ github.sha }}
-        path: build/xdts_viewer.dmg
+      - name: Build and package arm64 DMG
+        run: ./scripts/package-macos-arm64.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Verify package checksum
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          (cd artifacts && shasum -a 256 -c "xdts_viewer_arm64_v${version}_macos.dmg.sha256")
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            "artifacts/xdts_viewer_arm64_v${version}_macos.dmg" \
+            "artifacts/xdts_viewer_arm64_v${version}_macos.dmg.sha256" \
+            --verify-tag \
+            --title "XDTS Viewer arm64 ${GITHUB_REF_NAME}" \
+            --generate-notes
